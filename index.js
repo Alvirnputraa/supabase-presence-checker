@@ -12,27 +12,44 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 console.log("🚀 Presence Checker Service Started (interval 2s, cutoff 5s)");
 
+// ✅ Fungsi update offline untuk user1 & user2
 async function setUsersOffline() {
   try {
-    const cutoff = new Date(Date.now() - 5000).toISOString(); // ✅ idle >5s dianggap offline
-    console.log(`🔍 Mengecek user idle >5s... [${new Date().toISOString()}]`);
+    const cutoff = new Date(Date.now() - 5000).toISOString(); // idle >5s dianggap offline
+    console.log(`🔍 Mengecek user idle >5s di private_chats... [${new Date().toISOString()}]`);
 
-    const { data, error } = await supabase
-      .from("users")
-      .update({ status: "offline" })
-      .lt("status_ping_updated_at", cutoff)
-      .eq("status", "online")
+    // ✅ 1. Update untuk user1
+    const { data: data1, error: error1 } = await supabase
+      .from("private_chats")
+      .update({ user1_status: "offline" })
+      .lt("user1_status_ping_updated_at", cutoff)
+      .eq("user1_status", "online")
       .select("id");
 
-    if (error) {
-      console.error("❌ Gagal update user offline:", error);
+    if (error1) {
+      console.error("❌ Gagal update user1 offline:", error1);
+    } else if (data1?.length) {
+      console.log(`✅ ${data1.length} user1 idle >5s di-set offline:`, data1.map(u => u.id));
     } else {
-      if (data?.length) {
-        console.log(`✅ ${data.length} user idle >5s di-set offline:`, data.map(u => u.id));
-      } else {
-        console.log("✅ Tidak ada user idle >5s.");
-      }
+      console.log("✅ Tidak ada user1 idle >5s.");
     }
+
+    // ✅ 2. Update untuk user2
+    const { data: data2, error: error2 } = await supabase
+      .from("private_chats")
+      .update({ user2_status: "offline" })
+      .lt("user2_status_ping_updated_at", cutoff)
+      .eq("user2_status", "online")
+      .select("id");
+
+    if (error2) {
+      console.error("❌ Gagal update user2 offline:", error2);
+    } else if (data2?.length) {
+      console.log(`✅ ${data2.length} user2 idle >5s di-set offline:`, data2.map(u => u.id));
+    } else {
+      console.log("✅ Tidak ada user2 idle >5s.");
+    }
+
   } catch (err) {
     console.error("🔥 Error runtime:", err);
   }
