@@ -85,6 +85,9 @@ async function setUsersOffline() {
     } else {
       console.log("✅ Tidak ada user2 idle >20s + bufferr.");
     }
+    // Log waktu server Railway dan cutoff
+    console.log("⏰ Waktu server Railway sekarang:", new Date().toISOString());
+    console.log("⏰ Cutoff waktu:", cutoff);
 
   } catch (err) {
     console.error("🔥 Error runtime:", err);
