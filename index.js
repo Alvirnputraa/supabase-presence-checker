@@ -19,54 +19,57 @@ async function setUsersOffline() {
     // Flutter ping setiap 5 detik, Railway cek setiap 15 detik dengan cutoff 20 detik
     // Dalam 20 detik, Flutter akan ping 4 kali (detik ke-5, 10, 15, 20)
     // ✅ PERBAIKAN: Gunakan UTC untuk konsistensi dengan Flutter (.toUtc().toISOString())
-    const cutoff = new Date(Date.now() - 20000).toISOString(); // FIX: cukup gunakan UTC
-    console.log(`🔍 Mengecek user idle >20s di private_chats... [${new Date().toISOString()}]`);
-    console.log(`🕐 Cutoff time (UTC): ${cutoff}`);
-
-    // ✅ 1. Update user1 jika benar-benar idle - SAFE timing
+    // Ambil semua user yang status online dan ping tidak berubah lebih dari cutoff + buffer
+    const bufferMs = 3000; // 3 detik buffer
+    const cutoffMs = 20000 + bufferMs;
+    const cutoff = new Date(Date.now() - cutoffMs).toISOString();
+    // 1. Cari user1 yang status online dan ping tidak berubah > cutoff + buffer
     const { data: data1, error: error1 } = await supabase
       .from("private_chats")
-      .update({ 
-        user1_status: "offline",
-        user1_status_ping: `offline@${Date.now()}`,
-        user1_status_ping_updated_at: new Date().toISOString()
-      })
-      .lt("user1_status_ping_updated_at", cutoff)  // ✅ hanya jika timestamp < cutoff (20s)
-      .eq("user1_status", "online")               // ✅ hanya jika status masih online
-      .not("user1_status_ping_updated_at", "is", null) // ✅ pastikan ada timestamp
-      .not("user1_status_ping", "like", "offline%")    // ✅ jangan update jika ping sudah offline
-      .select("id, user1_status_ping_updated_at, user1_id");
-
-    if (error1) {
-      console.error("❌ Gagal update user1 offline:", error1);
-    } else if (data1?.length) {
-      console.log(`✅ ${data1.length} user1 idle >20s di-set offline:`);
-      data1.forEach(u => console.log(`   • ChatID: ${u.id} | UserID: ${u.user1_id} | Last Ping: ${u.user1_status_ping_updated_at}`));
+      .select("id, user1_status_ping_updated_at, user1_status_ping, user1_id")
+      .eq("user1_status", "online")
+      .not("user1_status_ping_updated_at", "is", null)
+      .not("user1_status_ping", "like", "offline%")
+      .lt("user1_status_ping_updated_at", cutoff);
+    // 2. Update user1 ke offline jika benar-benar idle
+    if (data1?.length) {
+      for (const u of data1) {
+        await supabase
+          .from("private_chats")
+          .update({
+            user1_status: "offline",
+            user1_status_ping: `offline@${Date.now()}`,
+            user1_status_ping_updated_at: new Date().toISOString()
+          })
+          .eq("id", u.id);
+        console.log(`✅ User1 idle >${cutoffMs/1000}s di-set offline: ChatID: ${u.id} | UserID: ${u.user1_id} | Last Ping: ${u.user1_status_ping_updated_at}`);
+      }
     } else {
-      console.log("✅ Tidak ada user1 idle >20s.");
+      console.log("✅ Tidak ada user1 idle >20s + buffer.");
     }
-
-    // ✅ 2. Update user2 jika benar-benar idle - SAFE timing
+    // 3. Cari user2 yang status online dan ping tidak berubah > cutoff + buffer
     const { data: data2, error: error2 } = await supabase
       .from("private_chats")
-      .update({ 
-        user2_status: "offline",
-        user2_status_ping: `offline@${Date.now()}`,
-        user2_status_ping_updated_at: new Date().toISOString()
-      })
-      .lt("user2_status_ping_updated_at", cutoff)  // ✅ hanya jika timestamp < cutoff (20s)
+      .select("id, user2_status_ping_updated_at, user2_status_ping, user2_id")
       .eq("user2_status", "online")
       .not("user2_status_ping_updated_at", "is", null)
       .not("user2_status_ping", "like", "offline%")
-      .select("id, user2_status_ping_updated_at, user2_id");
-
-    if (error2) {
-      console.error("❌ Gagal update user2 offline:", error2);
-    } else if (data2?.length) {
-      console.log(`✅ ${data2.length} user2 idle >20s di-set offline:`);
-      data2.forEach(u => console.log(`   • ChatID: ${u.id} | UserID: ${u.user2_id} | Last Ping: ${u.user2_status_ping_updated_at}`));
+      .lt("user2_status_ping_updated_at", cutoff);
+    // 4. Update user2 ke offline jika benar-benar idle
+    if (data2?.length) {
+      for (const u of data2) {
+        await supabase
+          .from("private_chats")
+          .update({
+            user2_status: "offline",
+            user2_status_ping: `offline@${Date.now()}`,
+            user2_status_ping_updated_at: new Date().toISOString()
+          })
+          .eq("id", u.id);
+        console.log(`✅ User2 idle >${cutoffMs/1000}s di-set offline: ChatID: ${u.id} | UserID: ${u.user2_id} | Last Ping: ${u.user2_status_ping_updated_at}`);
+      }
     } else {
-      console.log("✅ Tidak ada user2 idle >20s.");
+      console.log("✅ Tidak ada user2 idle >20s + buffer.");
     }
 
   } catch (err) {
@@ -75,4 +78,4 @@ async function setUsersOffline() {
 }
 
 // ✅ SAFE: Jalankan setiap 15 detik untuk memberikan waktu lebih cukup
-setInterval(setUsersOffline, 15000);
+setInterval(setUsersOffline, 17000);
