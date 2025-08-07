@@ -39,17 +39,25 @@ async function setUsersOffline() {
       });
     }
     // 2. Update user1 ke offline jika benar-benar idle
+    // Validasi manual: hanya update offline jika waktu ping benar-benar < cutoff
     if (data1?.length) {
+      console.log("🔎 Data user1 yang akan di-set offline (setelah validasi manual):");
       for (const u of data1) {
-        await supabase
-          .from("private_chats")
-          .update({
-            user1_status: "offline",
-            user1_status_ping: `offline@${Date.now()}`,
-            user1_status_ping_updated_at: new Date().toISOString()
-          })
-          .eq("id", u.id);
-        console.log(`✅ User1 idle >${cutoffMs/1000}s di-set offline: ChatID: ${u.id} | UserID: ${u.user1_id} | Last Ping: ${u.user1_status_ping_updated_at}`);
+        const pingTime = new Date(u.user1_status_ping_updated_at).getTime();
+        const cutoffTime = new Date(cutoff).getTime();
+        if (pingTime < cutoffTime) {
+          await supabase
+            .from("private_chats")
+            .update({
+              user1_status: "offline",
+              user1_status_ping: `offline@${Date.now()}`,
+              user1_status_ping_updated_at: new Date().toISOString()
+            })
+            .eq("id", u.id);
+          console.log(`✅ User1 idle >${cutoffMs/1000}s di-set offline: ChatID: ${u.id} | UserID: ${u.user1_id} | Last Ping: ${u.user1_status_ping_updated_at}`);
+        } else {
+          console.log(`⏩ SKIP: User1 ping masih baru, tidak di-set offline: ChatID: ${u.id} | UserID: ${u.user1_id} | Last Ping: ${u.user1_status_ping_updated_at}`);
+        }
       }
     } else {
       console.log("✅ Tidak ada user1 idle >20s + buffer.");
@@ -70,17 +78,25 @@ async function setUsersOffline() {
       });
     }
     // 4. Update user2 ke offline jika benar-benar idle
+    // Validasi manual untuk user2
     if (data2?.length) {
+      console.log("🔎 Data user2 yang akan di-set offline (setelah validasi manual):");
       for (const u of data2) {
-        await supabase
-          .from("private_chats")
-          .update({
-            user2_status: "offline",
-            user2_status_ping: `offline@${Date.now()}`,
-            user2_status_ping_updated_at: new Date().toISOString()
-          })
-          .eq("id", u.id);
-        console.log(`✅ User2 idle >${cutoffMs/1000}s di-set offline: ChatID: ${u.id} | UserID: ${u.user2_id} | Last Ping: ${u.user2_status_ping_updated_at}`);
+        const pingTime = new Date(u.user2_status_ping_updated_at).getTime();
+        const cutoffTime = new Date(cutoff).getTime();
+        if (pingTime < cutoffTime) {
+          await supabase
+            .from("private_chats")
+            .update({
+              user2_status: "offline",
+              user2_status_ping: `offline@${Date.now()}`,
+              user2_status_ping_updated_at: new Date().toISOString()
+            })
+            .eq("id", u.id);
+          console.log(`✅ User2 idle >${cutoffMs/1000}s di-set offline: ChatID: ${u.id} | UserID: ${u.user2_id} | Last Ping: ${u.user2_status_ping_updated_at}`);
+        } else {
+          console.log(`⏩ SKIP: User2 ping masih baru, tidak di-set offline: ChatID: ${u.id} | UserID: ${u.user2_id} | Last Ping: ${u.user2_status_ping_updated_at}`);
+        }
       }
     } else {
       console.log("✅ Tidak ada user2 idle >20s + bufferr.");
