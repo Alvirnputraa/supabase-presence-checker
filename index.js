@@ -19,8 +19,7 @@ async function setUsersOffline() {
     // Flutter ping setiap 5 detik, Railway cek setiap 15 detik dengan cutoff 20 detik
     // Dalam 20 detik, Flutter akan ping 4 kali (detik ke-5, 10, 15, 20)
     // ✅ PERBAIKAN: Gunakan UTC untuk konsistensi dengan Flutter (.toUtc().toISOString())
-    const cutoffTime = new Date(Date.now() - 20000);
-    const cutoff = new Date(cutoffTime.getTime() - (cutoffTime.getTimezoneOffset() * 60000)).toISOString();
+    const cutoff = new Date(Date.now() - 20000).toISOString(); // FIX: cukup gunakan UTC
     console.log(`🔍 Mengecek user idle >20s di private_chats... [${new Date().toISOString()}]`);
     console.log(`🕐 Cutoff time (UTC): ${cutoff}`);
 
