@@ -31,6 +31,13 @@ async function setUsersOffline() {
       .not("user1_status_ping_updated_at", "is", null)
       .not("user1_status_ping", "like", "offline%")
       .lt("user1_status_ping_updated_at", cutoff);
+    // Log detail data yang akan di-set offline
+    if (data1?.length) {
+      console.log("🔎 Data user1 yang akan di-set offline:");
+      data1.forEach(u => {
+        console.log(`   • ChatID: ${u.id} | UserID: ${u.user1_id} | Last Ping: ${u.user1_status_ping_updated_at} | Status Ping: ${u.user1_status_ping}`);
+      });
+    }
     // 2. Update user1 ke offline jika benar-benar idle
     if (data1?.length) {
       for (const u of data1) {
@@ -55,6 +62,13 @@ async function setUsersOffline() {
       .not("user2_status_ping_updated_at", "is", null)
       .not("user2_status_ping", "like", "offline%")
       .lt("user2_status_ping_updated_at", cutoff);
+    // Log detail data yang akan di-set offline
+    if (data2?.length) {
+      console.log("🔎 Data user2 yang akan di-set offline:");
+      data2.forEach(u => {
+        console.log(`   • ChatID: ${u.id} | UserID: ${u.user2_id} | Last Ping: ${u.user2_status_ping_updated_at} | Status Ping: ${u.user2_status_ping}`);
+      });
+    }
     // 4. Update user2 ke offline jika benar-benar idle
     if (data2?.length) {
       for (const u of data2) {
@@ -69,7 +83,7 @@ async function setUsersOffline() {
         console.log(`✅ User2 idle >${cutoffMs/1000}s di-set offline: ChatID: ${u.id} | UserID: ${u.user2_id} | Last Ping: ${u.user2_status_ping_updated_at}`);
       }
     } else {
-      console.log("✅ Tidak ada user2 idle >20s + buffer.");
+      console.log("✅ Tidak ada user2 idle >20s + bufferr.");
     }
 
   } catch (err) {
